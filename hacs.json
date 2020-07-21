@@ -1,0 +1,6 @@
+{
+    "name": "Vodafone Power Station Device Tracker",
+    "country": "IT",
+    "render_readme": true,
+    "domains": ["device_tracker"]
+}

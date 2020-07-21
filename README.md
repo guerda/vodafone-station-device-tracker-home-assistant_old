@@ -8,7 +8,7 @@ It extracts the list of connected devices and expose them to Home Assistant.
 
 ### Option 1
 
-Use [HACS](https://hacs.xyz/) and add this repo.
+Use [HACS](https://hacs.xyz/) and add this repo: `https://github.com/paoloantinori/ha_vodafone_power_station_device_tracker`.
 
 ### Option 2
 
