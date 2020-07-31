@@ -2,6 +2,6 @@
     "domain": "vodafone_power_station",
     "name": "Vodafone Power Station",
     "documentation": "https://github.com/paoloantinori/ha_vodafone_power_station_device_tracker",
-    "codeowners": ["sonicaaaa@gmail.com"],
+    "codeowners": ["paoloantinori"],
     "issue_tracker": "https://github.com/paoloantinori/ha_vodafone_power_station_device_tracker/issues"
   }
