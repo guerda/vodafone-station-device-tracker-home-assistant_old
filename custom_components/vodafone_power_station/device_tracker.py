@@ -1,27 +1,22 @@
 """Support for Vodafone Power Station."""
-import logging
-
-from aiohttp.hdrs import CONTENT_TYPE
 import datetime
 import hashlib
 import hmac
-import html 
+import html
+import logging
 import re
-import requests
 import urllib.parse
-import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+import requests
+import voluptuous as vol
+from aiohttp.hdrs import CONTENT_TYPE
 from homeassistant.components.device_tracker import (
     DOMAIN,
     PLATFORM_SCHEMA,
     DeviceScanner,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,15 +24,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
+        vol.Required(CONF_PASSWORD): cv.string,
     }
 )
+
 
 def get_scanner(hass, config):
     """Return the Vodafone Power Station device scanner."""
     scanner = VodafonePowerStationDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
+
 
 class VodafonePowerStationDeviceScanner(DeviceScanner):
     """This class queries a router running Vodafone Power Station firmware."""
@@ -48,7 +45,7 @@ class VodafonePowerStationDeviceScanner(DeviceScanner):
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
         self.password = urllib.parse.quote(self.password)
-        self.password = html.unescape(self.password) 
+        self.password = html.unescape(self.password)
         self.last_results = {}
 
         # Test the router is accessible.
@@ -82,7 +79,9 @@ class VodafonePowerStationDeviceScanner(DeviceScanner):
         if not data:
             return False
 
-        active_clients = [client for client in data.values() if client["status"] == "on"]
+        active_clients = [
+            client for client in data.values() if client["status"] == "on"
+        ]
         self.last_results = active_clients
         return True
 
@@ -92,16 +91,16 @@ class VodafonePowerStationDeviceScanner(DeviceScanner):
         devices = {}
 
         try:
-            s = requests.Session() # creates session to store cookies
+            s = requests.Session()  # creates session to store cookies
             url = f"http://{self.host}/login.html"
             headers = {
-                'User-Agent': 'Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0',
-                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-                'Accept-Language': 'en-GB,en;q=0.5',
-                'Origin': f"http://{self.host}",
-                'Referer': f"http://{self.host}/login.html",
-                'DNT': '1'
-                }
+                "User-Agent": "Mozilla/5.0 (X11; Fedora; Linux x86_64; rv:78.0) Gecko/20100101 Firefox/78.0",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+                "Accept-Language": "en-GB,en;q=0.5",
+                "Origin": f"http://{self.host}",
+                "Referer": f"http://{self.host}/login.html",
+                "DNT": "1",
+            }
 
             r = s.get(url, headers=headers, timeout=10)
             m = re.search("(?<=csrf_token = ')[^']+", r.text)
@@ -109,7 +108,7 @@ class VodafonePowerStationDeviceScanner(DeviceScanner):
 
             ts = datetime.datetime.now().strftime("%s")
             url = f"http://{self.host}/data/user_lang.json?_={ts}&csrf_token={csrf}"
-            r = s.get(url, headers=headers, timeout=10)  
+            r = s.get(url, headers=headers, timeout=10)
 
             j = r.json()
             user_obj = {}
@@ -118,19 +117,29 @@ class VodafonePowerStationDeviceScanner(DeviceScanner):
                 val = list(item.values())[0]
                 user_obj[key] = val
 
-            salt = user_obj['salt']
-            encryption_key = user_obj['encryption_key']
+            salt = user_obj["salt"]
+            encryption_key = user_obj["encryption_key"]
 
-            hash1_pass = hmac.new(bytes('$1$SERCOMM$' , 'latin-1'), msg = bytes(self.password , 'latin-1'), digestmod = hashlib.sha256).hexdigest()
-            user_password = hmac.new(bytes(encryption_key , 'latin-1'), msg = bytes(hash1_pass , 'latin-1'), digestmod = hashlib.sha256).hexdigest()
+            hash1_pass = hmac.new(
+                bytes("$1$SERCOMM$", "latin-1"),
+                msg=bytes(self.password, "latin-1"),
+                digestmod=hashlib.sha256,
+            ).hexdigest()
+            user_password = hmac.new(
+                bytes(encryption_key, "latin-1"),
+                msg=bytes(hash1_pass, "latin-1"),
+                digestmod=hashlib.sha256,
+            ).hexdigest()
 
-            cookie_obj = requests.cookies.create_cookie(domain=self.host,name='login_uid',value='1')
+            cookie_obj = requests.cookies.create_cookie(
+                domain=self.host, name="login_uid", value="1"
+            )
             s.cookies.set_cookie(cookie_obj)
             ts = datetime.datetime.now().strftime("%s")
             url = f"http://{self.host}/data/reset.json?_={ts}&csrf_token={csrf}"
-            response = s.post(url,  headers=headers, timeout=10)
+            response = s.post(url, headers=headers, timeout=10)
 
-            payload = {'LoginName': 'vodafone', 'LoginPWD': user_password}
+            payload = {"LoginName": "vodafone", "LoginPWD": user_password}
 
             ts = datetime.datetime.now().strftime("%s")
             url = f"http://{self.host}/data/login.json?_={ts}&csrf_token={csrf}"
@@ -148,7 +157,9 @@ class VodafonePowerStationDeviceScanner(DeviceScanner):
         ):
             _LOGGER.info("No response from Vodafone Power Station")
             return devices
-        kv_tuples = [(list(v.keys())[0], (list(v.values())[0])) for v in response.json()]
+        kv_tuples = [
+            (list(v.keys())[0], (list(v.values())[0])) for v in response.json()
+        ]
         kv = {}
         for entry in kv_tuples:
             kv[entry[0]] = entry[1]
@@ -158,31 +169,31 @@ class VodafonePowerStationDeviceScanner(DeviceScanner):
             _LOGGER.info("No device in response from Vodafone Power Station")
             return devices
 
-# 'on|smartphone|Telefono Nora (2.4GHz)|00:0a:f5:6d:8b:38|192.168.1.128;'
+        # 'on|smartphone|Telefono Nora (2.4GHz)|00:0a:f5:6d:8b:38|192.168.1.128;'
         arr_devices = []
-        arr_wifi_user = kv["wifi_user"].split(';')
-        arr_wifi_user = filter(lambda x : x.strip() != '', arr_wifi_user)
-        arr_wifi_guest = kv["wifi_guest"].split(';')
-        arr_wifi_guest = filter(lambda x : x.strip() != '', arr_wifi_guest)
+        arr_wifi_user = kv["wifi_user"].split(";")
+        arr_wifi_user = filter(lambda x: x.strip() != "", arr_wifi_user)
+        arr_wifi_guest = kv["wifi_guest"].split(";")
+        arr_wifi_guest = filter(lambda x: x.strip() != "", arr_wifi_guest)
         arr_devices.append(arr_wifi_user)
         arr_devices.append(arr_wifi_guest)
-        arr_ethernet = [dev for dev in kv["ethernet"].split(';')]
-        arr_ethernet = filter(lambda x : x.strip() != '', arr_ethernet)
-        arr_ethernet = ['on|' + dev for dev in arr_ethernet]
+        arr_ethernet = [dev for dev in kv["ethernet"].split(";")]
+        arr_ethernet = filter(lambda x: x.strip() != "", arr_ethernet)
+        arr_ethernet = ["on|" + dev for dev in arr_ethernet]
         arr_devices.append(arr_ethernet)
         arr_devices = [item for sublist in arr_devices for item in sublist]
         _LOGGER.debug("Arr_devices: %s" % arr_devices)
 
         for device_line in arr_devices:
-            device_fields = device_line.split('|')
+            device_fields = device_line.split("|")
             try:
                 devices[device_fields[2]] = {
                     "ip": device_fields[4],
                     "mac": device_fields[3],
                     "status": device_fields[0],
-                    "name": device_fields[2]
+                    "name": device_fields[2],
                 }
-            except (KeyError, requests.exceptions.RequestException,IndexError):
+            except (KeyError, requests.exceptions.RequestException, IndexError):
                 _LOGGER.warn("Error processing line: %s" % device_line)
 
         return devices
