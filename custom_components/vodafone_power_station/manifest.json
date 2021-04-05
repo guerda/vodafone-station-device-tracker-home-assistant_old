@@ -3,5 +3,6 @@
     "name": "Vodafone Power Station",
     "documentation": "https://github.com/paoloantinori/ha_vodafone_power_station_device_tracker",
     "codeowners": ["@paoloantinori"],
+    "version": "1.0",
     "issue_tracker": "https://github.com/paoloantinori/ha_vodafone_power_station_device_tracker/issues"
   }
