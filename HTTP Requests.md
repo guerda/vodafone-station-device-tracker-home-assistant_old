@@ -31,7 +31,15 @@ For Python, this is helpful: https://gist.github.com/tiberiucorbu/a51c81b82b5196
 Body
 
     username=admin&password=<hash 32 characters>
+    
+Request Menu
+------------
+The menu needs to be retrieved, otherwise the next call fails
 
+Request: `http://<ip>/api/v1/session/menu?_=1674466341533`
+
+Same headers and cookies as above
+   
 Associated Devices
 ------------------
 
