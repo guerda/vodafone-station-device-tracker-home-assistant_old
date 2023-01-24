@@ -1,6 +1,6 @@
-# Home Assistant Device Tracker for Vodafone Power Station
+# Home Assistant Device Tracker for Vodafone Station
 
-This is a Home Assistant Device Tracker that works with the italian version of Vodafone Power Station.
+This is a Home Assistant Device Tracker that works with the italian version of Vodafone Station.
 
 It extracts the list of connected devices and expose them to Home Assistant.
 
@@ -8,7 +8,7 @@ It extracts the list of connected devices and expose them to Home Assistant.
 
 ### Option 1
 
-Use [HACS](https://hacs.xyz/) and add this repo: `https://github.com/paoloantinori/ha_vodafone_power_station_device_tracker`.
+Use [HACS](https://hacs.xyz/) and add this repo: `https://github.com/guerda/vodafone-station-device-tracker-home-assistant`.
 
 ### Option 2
 
@@ -20,7 +20,7 @@ Manually copy the content of this repo in your `custom_components/` folder.
 Add this tracker to your `device_tracker` section:
 
 ```yaml
-- platform: vodafone_power_station
+- platform: vodafone_station
   interval_seconds: 60
   host: XX.XX.XX.XX
   username: your_username_here
@@ -35,7 +35,7 @@ To enable logging:
 logger:
   default: info
   logs:
-    custom_components.vodafone_power_station.device_tracker: info
+    custom_components.vodafone_station.device_tracker: info
 ```
 
 The discovered devices will be listed in the `known_devices.yaml` file.

@@ -1,0 +1,8 @@
+{
+    "domain": "vodafone_station",
+    "name": "Vodafone Station",
+    "documentation": "https://github.com/guerda/vodafone-station-device-tracker-home-assistant",
+    "codeowners": ["@paoloantinori", "@guerda"],
+    "version": "1.0",
+    "issue_tracker": "https://github.com/guerda/vodafone-station-device-tracker-home-assistant/issues"
+  }
